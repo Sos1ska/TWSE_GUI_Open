@@ -4,8 +4,8 @@
 TWSE_GUI - Это <b>The White Search Engine</b>, но в виде GUI<br>
 TWSE получает данные по открытым api ресурсам. Это номер телефона, ip-адрес, mac-адрес<br>
 
-TWSE_GUI написан на языке Python версии 3.10. И на библиотеке <code>![tkinter](https://pypi.org/project/tk-tools/)</code>.<br>
-Также он был скомпилирован <code>![pyinstaller](https://pypi.org/project/pyinstaller/)</code> и его установщик в <code>![Inno Setup 6](https://jrsoftware.org/isdl.php)</code><br>
+TWSE_GUI написан на языке Python версии 3.10. И на библиотеке <code><a href="https://pypi.org/project/tk-tools/">Tkinter</a></code>.<br>
+Также он был скомпилирован <code><a href="https://pypi.org/project/pyinstaller/">Pyinstaller</a></code> и его установщик в <code><a href="https://jrsoftware.org/isdl.php">Inno Setup 6</a></code><br>
 Работает на <code>Windows 7</code> и выше
 
 # Groups
