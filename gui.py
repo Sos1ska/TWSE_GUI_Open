@@ -9,8 +9,27 @@ from tkinter import *   # Сам движок
 from tkinter import ttk
 from tkinter import messagebox
 from sys import exit
+
+from source.__eng__ import Buttons as Buttons_eng   # Языки
+from source.__eng__ import Banners as Banners_eng
+from source.__eng__ import Labels as Labels_eng
+
+from source.__rus__ import Buttons as Buttons_rus
+from source.__rus__ import Banners as Banners_rus
+from source.__rus__ import Labels as Labels_rus
+
 global path
 global _cache
+
+def load_py_file(filepath):
+    import sys
+    _path, fname = folder.split(filepath)
+    module, _ = folder.splitext(fname)
+        
+    if path not in sys.path:            
+        sys.path.insert(0, _path)
+        
+    return __import__(module)
 
 def os(_path):   # Нужен чтобы понимать, что за ОС ну и правильные пути к папкам в ОС
     import os
@@ -33,6 +52,8 @@ else : mkdir(os(path+"cache"))
 
 class config:   # Настройки
     with open(os(path+"config/system.json"), "r") as file_config_load : config = load(file_config_load)
+class user_config:
+    with open(os(path+"config/user.json"), "r") as file_config_user_load : user_config = load(file_config_user_load)
 
 def _ip():   # Метод получения данных
     # Clear cache number 1
@@ -220,15 +241,30 @@ def _quit():    # Модуль для выхода из ПО
     exit(1)
 
 class _gui:    # Главный класс, который создаёт окно для пользователя
+
     Main = Tk()    # Корень главного окна
+
     config = config.config    # Получение настроек из класса config
+    user_config = user_config.user_config
+    
     IPEntry = Entry(Main)   # Поле для IP-Адреса
+
     MACEntry = Entry(Main)   # Поле для MAC-Адреса
+
     NumberEntry = Entry(Main)   # Поле для номера телефона
-    IPButton = ttk.Button(Main, text="Break", command=_ip)   # Ну тут логично. Кнопки
-    MACButton = ttk.Button(Main, text="Break", command=_mac)
-    NumberButton = ttk.Button(Main, text="Break", command=_number)
-    Quit = ttk.Button(Main, text="Exit", command=_quit)
+
+    match user_config["Language"]:
+        case "english":
+            IPButton = ttk.Button(Main, text=Buttons_eng.out[0], command=_ip)   # Ну тут логично. Кнопки
+            MACButton = ttk.Button(Main, text=Buttons_eng.out[1], command=_mac)
+            NumberButton = ttk.Button(Main, text=Buttons_eng.out[2], command=_number)
+            Quit = ttk.Button(Main, text=Buttons_eng.out[3], command=_quit)
+        case "russia":
+            IPButton = ttk.Button(Main, text=Buttons_rus.out[0], command=_ip)   # Ну тут логично. Кнопки
+            MACButton = ttk.Button(Main, text=Buttons_rus.out[1], command=_mac)
+            NumberButton = ttk.Button(Main, text=Buttons_rus.out[2], command=_number)
+            Quit = ttk.Button(Main, text=Buttons_rus.out[3], command=_quit)
+
     def gui(self):   # Создание окна
         @log_start("_gui.gui.__main__")
         def __main__():
@@ -244,21 +280,30 @@ class _gui:    # Главный класс, который создаёт окн
             self._labels()
             self._banners()
         self.Main.mainloop()
+
     def _labels(self):   # Создание текста
         @log_start("_gui._label.__main__")
         def __main_old__():
-            IP = Label(self.Main, text="IP-Address", font=("", 15))
-            MAC = Label(self.Main, text="MAC-Address", font=("", 15))
-            Number = Label(self.Main, text="NumberPhone", font=("", 15))
+            match self.user_config["Language"]:
+                case "english":
+                    IP = Label(self.Main, text=Labels_eng.out[0], font=("", 15))
+                    MAC = Label(self.Main, text=Labels_eng.out[1], font=("", 15))
+                    Number = Label(self.Main, text=Labels_eng.out[2], font=("", 15))
+                case "russia":
+                    IP = Label(self.Main, text=Labels_rus.out[0], font=("", 15))
+                    MAC = Label(self.Main, text=Labels_rus.out[1], font=("", 15))
+                    Number = Label(self.Main, text=Labels_rus.out[2], font=("", 15))
             IP.place(relx=self.config["Main"]["_Locations"]["_Labels"]["IP"]["x"], rely=self.config["Main"]["_Locations"]["_Labels"]["IP"]["y"])
             MAC.place(relx=self.config["Main"]["_Locations"]["_Labels"]["MAC"]["x"], rely=self.config["Main"]["_Locations"]["_Labels"]["MAC"]["y"])
             Number.place(relx=self.config["Main"]["_Locations"]["_Labels"]["Number"]["x"], rely=self.config["Main"]["_Locations"]["_Labels"]["Number"]["y"])
+
     def _entrys(self):   # Создание полей для ввода
         @log_start("_gui._entrys.__main__")
         def __main__():
             self.IPEntry.place(relx=self.config["Main"]["_Locations"]["_Entrys"]["IP"]["x"], rely=self.config["Main"]["_Locations"]["_Entrys"]["IP"]["y"])
             self.MACEntry.place(relx=self.config["Main"]["_Locations"]["_Entrys"]["MAC"]["x"], rely=self.config["Main"]["_Locations"]["_Entrys"]["MAC"]["y"])
             self.NumberEntry.place(relx=self.config["Main"]["_Locations"]["_Entrys"]["Number"]["x"], rely=self.config["Main"]["_Locations"]["_Entrys"]["Number"]["y"])
+
     def _buttons(self):   # Создание кнопок
         @log_start("_gui._buttons.__main__")
         def __main__():
@@ -266,10 +311,15 @@ class _gui:    # Главный класс, который создаёт окн
             self.MACButton.place(relx=self.config["Main"]["_Locations"]["_Buttons"]["MAC"]["x"], rely=self.config["Main"]["_Locations"]["_Buttons"]["MAC"]["y"])
             self.NumberButton.place(relx=self.config["Main"]["_Locations"]["_Buttons"]["Number"]["x"], rely=self.config["Main"]["_Locations"]["_Buttons"]["Number"]["y"])
             self.Quit.place(relx=self.config["Main"]["_Locations"]["_Buttons"]["Quit"]["x"], rely=self.config["Main"]["_Locations"]["_Buttons"]["Quit"]["y"])
+
     def _banners(self):   # Создание баннеров
         @log_start("_gui._banners.__main__")
         def __main__():
-            Banner1 = Label(self.Main, text="Answer", font=("", 15))
+            match self.user_config["Language"]:
+                case "english":
+                    Banner1 = Label(self.Main, text=Banners_eng.out[0], font=("", 15))
+                case "russia":
+                    Banner1 = Label(self.Main, text=Banners_rus.out[0], font=("", 15))
             Banner1.place(relx=self.config["Main"]["_Locations"]["_Banner1"]["x"], rely=self.config["Main"]["_Locations"]["_Banner1"]["y"])
 
 class _micro_window(_gui):
@@ -331,4 +381,4 @@ class _gui_answer(_gui):   # "Подручный класс". Я считаю е
                 self.OperINN.config(text=upload["OperINN"])
                 self.RegionName.config(text=upload["RegionName"])
             case _ : pass
-if __name__ == "__main__" : _gui().gui()   # Вызов главного класса с его главным модулем
+if __name__ == "__main__" : _gui().gui()
