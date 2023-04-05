@@ -43,6 +43,7 @@ _cache = []
 _cache_deleted_ip = []
 _cache_deleted_mac = []
 _cache_deleted_number = []
+_cache_work_proxy = []
 
 if "work" in path : path=path.replace(r"work", "")
 else: 
@@ -63,7 +64,20 @@ def _ip():   # Метод получения данных
         except: 
             messagebox.showwarning(_gui.config["Main"]["_NotificationWarn"]["_Title"], "Entry empty")
             pass
-        ip_module(_local_ip, _gui.config["Main"]["Proxy"])
+        match _local_ip:
+            case "" : pass
+            case _ : log_organ(f"Data -> \"{_local_ip}\"")
+        match _cache_work_proxy[0]:
+            case "ProxyLoad = True":
+                match folder.exists(os(path+"cache/proxy.json")):
+                    case True : proxy = True
+                    case False:
+                        _cache_work_proxy.clear()
+                        _cache_work_proxy.append("ProxyLoad = False")
+                        messagebox.showwarning(_gui.config["Main"]["_NotificationWarn"]["_Title"], "You use proxy module without proxy...")
+                        proxy = False
+            case "ProxyLoad = False" : proxy = False
+        ip_module(_local_ip, proxy)
         try:
             with open(os(path+"cache/answer.json.ip"), "r") as file_cache : data_cache_file = load(file_cache)
         except FileNotFoundError as fnfe : messagebox.showerror(_gui.config["Main"]["_Notification"]["_Title"], fnfe)
@@ -135,7 +149,20 @@ def _mac():   # Clear cache number 2
         except: 
             messagebox.showwarning(_gui.config["Main"]["_NotificationWarn"]["_Title"], "Entry empty")
             pass
-        mac_module(_local_mac, _gui.config["Main"]["Proxy"])
+        match _local_mac:
+            case "" : messagebox.showwarning(_gui.config["Main"]["_NotificationWarn"]["_Title"], "Entry empty")
+            case _ : pass
+        match _cache_work_proxy[0]:
+            case "ProxyLoad = True":
+                match folder.exists(os(path+"cache/proxy.json")):
+                    case True : proxy = True
+                    case False:
+                        _cache_work_proxy.clear()
+                        _cache_work_proxy.append("ProxyLoad = False")
+                        messagebox.showwarning(_gui.config["Main"]["_NotificationWarn"]["_Title"], "You use proxy module without proxy...")
+                        proxy = False
+            case "ProxyLoad = False" : proxy = False
+        mac_module(_local_mac, proxy)
         try:
             with open(os(path+"cache/answer.json.mac"), "r") as file_cache : data_cache_file = load(file_cache)
         except FileNotFoundError as fnfe : messagebox.showerror(_gui.config["Main"]["_Notification"]["_Title"], fnfe)
@@ -187,7 +214,17 @@ def _number():   # Clear cache number 3
         except: 
             messagebox.showwarning(_gui.config["Main"]["_NotificationWarn"]["_Title"], "Entry empty")
             pass
-        number_module(_local_number, _gui.config["Main"]["Proxy"])
+        match _cache_work_proxy[0]:
+            case "ProxyLoad = True":
+                match folder.exists(os(path+"cache/proxy.json")):
+                    case True : proxy = True
+                    case False:
+                        _cache_work_proxy.clear()
+                        _cache_work_proxy.append("ProxyLoad = False")
+                        messagebox.showwarning(_gui.config["Main"]["_NotificationWarn"]["_Title"], "You use proxy module without proxy...")
+                        proxy = False
+            case "ProxyLoad = False" : proxy = False
+        number_module(_local_number, proxy)
         try:
             with open(os(path+"cache/answer.json.number"), "r") as file_cache : data_cache_file = load(file_cache)
         except FileNotFoundError as fnfe : messagebox.showerror(_gui.config["Main"]["_Notification"]["_Title"], fnfe)
@@ -237,6 +274,64 @@ def _number():   # Clear cache number 3
             case "424" : messagebox.showerror(_gui.config["Main"]["_Notification"]["_Title"], "Code error 424")
             case "503" : messagebox.showerror(_gui.config["Main"]["_Notification"]["_Title"], "Code error 503")
 
+def __generate_proxy__():
+    @log_start("__generate_proxy__.__main__")
+    def __main__():
+        from requests import get
+        from json import loads, dump
+        from bs4 import BeautifulSoup
+        send_request = get("http://ip-api.com/json")
+        user_ip_ = BeautifulSoup(send_request.text, "html.parser").text.strip()
+        Handler = loads(user_ip_)
+        user_ip = Handler["query"]
+        lines = sum(1 for line in open(os(path+"proxy.txt")))
+        file = open(os(path+"proxy.txt"))
+        file_l = file.readlines()
+        for read in range(0, lines):
+            try:
+                proxies = file_l[read].replace("\n", "")
+                proxy = {"http":f"http://{proxies}","https":f"https://{proxies}", "socks4":f"socks4://{proxies}", "socks5":f"socks5://{proxies}"}
+                send_request_proxy = get("http://ip-api.com/json", proxies=proxy)
+                user_ip_proxy_ = BeautifulSoup(send_request_proxy.text, "html.parser").text.strip()
+                Handler_proxy = loads(user_ip_proxy_)
+                user_ip_proxy = Handler_proxy["query"]
+                if user_ip == user_ip_proxy : continue
+                else:
+                    with open(os(path+"cache/proxy.json"), "w") as file_cache : dump(proxy, file_cache)
+                    break 
+            except : continue
+        messagebox.showinfo("TWSE_GUI [Proxy]", "Proxy generated")
+
+class location:
+    def _buttons(self, _button) -> list:
+        match _button:
+            case "ip":
+                match user_config.user_config["Language"]:
+                    case "russia":
+                        return [config.config["Main"]["_Locations"]["_ButtonsRu"]["IP"]["x"], config.config["Main"]["_Locations"]["_ButtonsRu"]["IP"]["y"]]
+                    case "english":
+                        return [config.config["Main"]["_Locations"]["_Buttons"]["IP"]["x"], config.config["Main"]["_Locations"]["_Buttons"]["IP"]["y"]]
+            case "mac":
+                match user_config.user_config["Language"]:
+                    case "russia":
+                        return [config.config["Main"]["_Locations"]["_ButtonsRu"]["MAC"]["x"], config.config["Main"]["_Locations"]["_ButtonsRu"]["MAC"]["y"]]
+                    case "english":
+                        return [config.config["Main"]["_Locations"]["_Buttons"]["MAC"]["x"], config.config["Main"]["_Locations"]["_Buttons"]["MAC"]["y"]]
+            case "number":
+                match user_config.user_config["Language"]:
+                    case "russia":
+                        return [config.config["Main"]["_Locations"]["_ButtonsRu"]["Number"]["x"], config.config["Main"]["_Locations"]["_ButtonsRu"]["Number"]["y"]]
+                    case "english":
+                        return [config.config["Main"]["_Locations"]["_Buttons"]["Number"]["x"], config.config["Main"]["_Locations"]["_Buttons"]["Number"]["y"]]
+            case "ProxyGenerate":
+                return [config.config["Main"]["_Locations"]["_Buttons"]["ProxyGenerate"]["x"], config.config["Main"]["_Locations"]["_Buttons"]["ProxyGenerate"]["y"]]
+
+def _autoload():
+    match config.config["Main"]["_AdditionalModules"]["Proxy"]:
+        case False : _cache_work_proxy.append("ProxyLoad = False")
+        case True : _cache_work_proxy.append("ProxyLoad = True")
+    print(_cache_work_proxy)
+
 def _quit():    # Модуль для выхода из ПО
     exit(1)
 
@@ -252,6 +347,8 @@ class _gui:    # Главный класс, который создаёт окн
     MACEntry = Entry(Main)   # Поле для MAC-Адреса
 
     NumberEntry = Entry(Main)   # Поле для номера телефона
+
+    ProxyGenerate = ttk.Button(Main, text="Proxy Generate", command=__generate_proxy__)
 
     match user_config["Language"]:
         case "english":
@@ -275,6 +372,7 @@ class _gui:    # Главный класс, который создаёт окн
             self.Main.resizable(False, False)
             self.Main.iconbitmap(os(path+self.config["Main"]["_Ico"]))
             _micro_window().__main__()
+            _autoload()
             self._buttons()
             self._entrys()
             self._labels()
@@ -307,9 +405,10 @@ class _gui:    # Главный класс, который создаёт окн
     def _buttons(self):   # Создание кнопок
         @log_start("_gui._buttons.__main__")
         def __main__():
-            self.IPButton.place(relx=self.config["Main"]["_Locations"]["_Buttons"]["IP"]["x"], rely=self.config["Main"]["_Locations"]["_Buttons"]["IP"]["y"])
-            self.MACButton.place(relx=self.config["Main"]["_Locations"]["_Buttons"]["MAC"]["x"], rely=self.config["Main"]["_Locations"]["_Buttons"]["MAC"]["y"])
-            self.NumberButton.place(relx=self.config["Main"]["_Locations"]["_Buttons"]["Number"]["x"], rely=self.config["Main"]["_Locations"]["_Buttons"]["Number"]["y"])
+            self.IPButton.place(relx=location()._buttons("ip")[0], rely=location()._buttons("ip")[1])
+            self.MACButton.place(relx=location()._buttons("mac")[0], rely=location()._buttons("mac")[1])
+            self.NumberButton.place(relx=location()._buttons("number")[0], rely=location()._buttons("number")[1])
+            self.ProxyGenerate.place(relx=location()._buttons("ProxyGenerate")[0], rely=location()._buttons("ProxyGenerate")[1])
             self.Quit.place(relx=self.config["Main"]["_Locations"]["_Buttons"]["Quit"]["x"], rely=self.config["Main"]["_Locations"]["_Buttons"]["Quit"]["y"])
 
     def _banners(self):   # Создание баннеров
@@ -324,11 +423,11 @@ class _gui:    # Главный класс, который создаёт окн
 
 class _micro_window(_gui):
     Main = _gui.Main
-    c = Canvas(Main, width=300, height=450)
+    c = Canvas(Main, width=350, height=450)
     def __main__(self):
         try : self.c.place(relx=self.config["Main"]["_Locations"]["_Micro_Window"]["x"], rely=self.config["Main"]["_Locations"]["_Micro_Window"]["y"])
         except Exception as ex : print(ex), quit()
-        finally : self.c.create_rectangle(15, 15, 300, 420)
+        finally : self.c.create_rectangle(15, 15, 350, 420)
 
 class _gui_answer(_gui):   # "Подручный класс". Я считаю его подручным, т.к. он создаёт нам уже окно ответа
     Continent = Label(_gui.Main)
